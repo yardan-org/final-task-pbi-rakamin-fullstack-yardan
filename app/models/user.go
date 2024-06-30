@@ -15,3 +15,8 @@ type User struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
+
+type UpdateUserPass struct {
+	OldPassword string `json:"old_password" valid:"required~Old password is required"`
+	NewPassword string `json:"new_password" valid:"required~New password is required"`
+}

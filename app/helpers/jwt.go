@@ -11,7 +11,7 @@ import (
 var jwtKey = []byte("my_secret_key")
 
 type JWTClaim struct {
-	UserID uuid.UUID `json:"user_id"`
+	UserId uuid.UUID `json:"user_id"`
 	jwt.StandardClaims
 }
 
@@ -19,7 +19,7 @@ func GenerateToken(userID uuid.UUID) (string, error) {
 	expirationTime := time.Now().Add(24 * time.Hour)
 
 	claims := &JWTClaim{
-		UserID: userID,
+		UserId: userID,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},
