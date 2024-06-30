@@ -30,10 +30,10 @@ func Connect() {
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
-		panic("failed to connect database")
+		log.Fatalf("Error connecting to database: %v", err)
 	}
 
-	fmt.Println("Connection Opened to Database")
+	fmt.Println("Connection opened to database")
 
 	db.AutoMigrate(&models.User{}, &models.Photo{})
 	DB = db
