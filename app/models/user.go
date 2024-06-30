@@ -7,11 +7,11 @@ import (
 )
 
 type User struct {
-	ID        uuid.UUID `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
-	Username  string    `gorm:"not null"`
-	Email     string    `gorm:"unique;not null"`
-	Password  string    `gorm:"not null"`
-	Photo     Photo     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        uuid.UUID `json:"id" gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
+	Username  string    `json:"username" valid:"required~Username is required"`
+	Email     string    `json:"email" gorm:"unique" valid:"required~Email is required,email~Invalid email format"`
+	Password  string    `json:"-" valid:"required~Password is required, length(6|30)~Password must be between 6 to 30 characters"`
+	Photo     *Photo    `json:"photo,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
