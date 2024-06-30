@@ -10,6 +10,7 @@ func SetupRouter() *gin.Engine {
 
 	userGroup := r.Group("/users")
 	{
+		userGroup.POST("/login", controllers.Login)
 		userGroup.POST("/register", controllers.Register)
 	}
 
