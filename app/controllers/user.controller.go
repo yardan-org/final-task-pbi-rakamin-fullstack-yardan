@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
@@ -20,16 +22,24 @@ func GetUserInfo(c *gin.Context) {
 
 	var user models.User
 
-	if err := database.DB.Where("id = ?", userID).First(&user).Error; err != nil {
+	if err := database.DB.Preload("Photo").Where("id = ?", userID).First(&user).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
+	}
+
+	var photoURL interface{}
+
+	if user.Photo == nil {
+		photoURL = nil
+	} else {
+		photoURL = fmt.Sprintf("%s/%s", os.Getenv("APP_HOST"), user.Photo.PhotoUrl)
 	}
 
 	response := gin.H{
 		"id":       user.ID,
 		"username": user.Username,
 		"email":    user.Email,
-		"photo":    user.Photo.PhotoUrl,
+		"photo":    photoURL,
 	}
 
 	c.JSON(http.StatusOK, response)

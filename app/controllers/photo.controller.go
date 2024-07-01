@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -9,9 +10,18 @@ import (
 	"github.com/google/uuid"
 	"github.com/yardan-org/final-task-pbi-rakamin-fullstack-yardan/app/database"
 	"github.com/yardan-org/final-task-pbi-rakamin-fullstack-yardan/app/models"
+	"github.com/yardan-org/final-task-pbi-rakamin-fullstack-yardan/app/utils"
 )
 
-func UploadPhotoProfile(c *gin.Context) {
+func ViewPhotoProfile(c *gin.Context) {
+	fileName := c.Param("fileName")
+	directory := "./photo/"
+	filePath := filepath.Join(directory, fileName)
+
+	c.File(filePath)
+}
+
+func AddPhotoProfile(c *gin.Context) {
 	userID, _ := c.Get("userId")
 	file, err := c.FormFile("file")
 
@@ -27,38 +37,18 @@ func UploadPhotoProfile(c *gin.Context) {
 		return
 	}
 
-	ext := filepath.Ext(file.Filename)
-	newFileName := uuid.New().String() + ext
-	savePath := filepath.Join("photos", newFileName)
-	savePath = filepath.ToSlash(savePath)
+	path := utils.GeneratePhotoPath(file)
 
-	if err := c.SaveUploadedFile(file, savePath); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save photo"})
+	if err := c.SaveUploadedFile(file, path); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	var photo models.Photo
-	photoExists := database.DB.Where("user_id = ?", userID).First(&photo).Error == nil
-
-	if photoExists {
-
-		if err := os.Remove(photo.PhotoUrl); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete old photo"})
-			return
-		}
-
-		if database.DB.Delete(&photo).Error != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete photo record"})
-			return
-		}
-
-	}
-
-	photo = models.Photo{
+	photo := models.Photo{
 		ID:       uuid.New(),
 		Title:    file.Filename,
 		Caption:  "photo " + file.Filename,
-		PhotoUrl: savePath,
+		PhotoUrl: path,
 		UserID:   userID.(uuid.UUID),
 	}
 
@@ -75,4 +65,69 @@ func UploadPhotoProfile(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Profile photo uploaded successfully"})
+}
+
+func UpdatePhotoProfile(c *gin.Context) {
+	userID, _ := c.Get("userId")
+	file, err := c.FormFile("file")
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to upload photo"})
+		return
+	}
+
+	var photo models.Photo
+
+	if err := database.DB.Where("user_id = ?", userID).First(&photo).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Photo not found"})
+		return
+	}
+
+	path := utils.GeneratePhotoPath(file)
+
+	if err := c.SaveUploadedFile(file, path); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save photo"})
+		return
+	}
+
+	if err := os.Remove(photo.PhotoUrl); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete old photo"})
+		return
+	}
+
+	photo.Title = file.Filename
+	photo.Caption = "photo " + file.Filename
+	photo.PhotoUrl = path
+
+	if err := database.DB.Save(&photo).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update photo record"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Profile photo updated successfully"})
+}
+
+func DeletePhotoProfile(c *gin.Context) {
+	userID, _ := c.Get("userId")
+
+	var photo models.Photo
+
+	if err := database.DB.Where("user_id = ?", userID).First(&photo).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Photo not found"})
+		return
+	}
+
+	fmt.Println("Photo URL : ", photo.PhotoUrl)
+
+	if err := os.Remove(photo.PhotoUrl); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := database.DB.Delete(&photo).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete photo record"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Profile photo deleted successfully"})
 }

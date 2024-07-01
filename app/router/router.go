@@ -20,7 +20,10 @@ func SetupRouter() *gin.Engine {
 
 	photoGroup := r.Group("/photo")
 	{
-		photoGroup.POST("/upload", middlewares.AuthMiddleware(), controllers.UploadPhotoProfile)
+		photoGroup.GET("/:fileName", controllers.ViewPhotoProfile)
+		photoGroup.POST("/upload", middlewares.AuthMiddleware(), controllers.AddPhotoProfile)
+		photoGroup.PUT("/update", middlewares.AuthMiddleware(), controllers.UpdatePhotoProfile)
+		photoGroup.DELETE("/delete", middlewares.AuthMiddleware(), controllers.DeletePhotoProfile)
 	}
 
 	return r
