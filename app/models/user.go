@@ -11,7 +11,7 @@ type User struct {
 	Username  string    `json:"username" valid:"required~Username is required"`
 	Email     string    `json:"email" gorm:"unique" valid:"required~Email is required,email~Invalid email format"`
 	Password  string    `json:"-" valid:"required~Password is required, length(6|30)~Password must be between 6 to 30 characters"`
-	Photo     *Photo    `json:"photo,omitempty"`
+	Photo     *Photo    `json:"photo,omitempty" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;default:null"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
