@@ -18,5 +18,10 @@ func SetupRouter() *gin.Engine {
 		userGroup.GET("/", middlewares.AuthMiddleware(), controllers.GetUserInfo)
 	}
 
+	photoGroup := r.Group("/photo")
+	{
+		photoGroup.POST("/upload", middlewares.AuthMiddleware(), controllers.UploadPhotoProfile)
+	}
+
 	return r
 }

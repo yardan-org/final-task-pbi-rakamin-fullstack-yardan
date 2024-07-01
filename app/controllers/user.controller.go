@@ -29,7 +29,7 @@ func GetUserInfo(c *gin.Context) {
 		"id":       user.ID,
 		"username": user.Username,
 		"email":    user.Email,
-		"photo":    user.Photo,
+		"photo":    user.Photo.PhotoUrl,
 	}
 
 	c.JSON(http.StatusOK, response)
